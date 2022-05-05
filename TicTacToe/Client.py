@@ -15,16 +15,25 @@ class Client:
     def client_thread(self):
         self.cs.send(Message("", MType.CONNECTION, CType.CLIENT).json)
         while True:
-            recieved = json.loads(self.cs.recv(2048))
-            match recieved['type']:
-                case MType.ID:
-                    print(f"You are Client {recieved['message']}")
-                    self.id = int(recieved['message'])
+            recieved = self.cs.recv(2048)
+            if not recieved:
+                continue
+            for r in recieved.decode('utf-8').split("@"):
+                if not r:
                     continue
-                case MType.END:
-                    print("The game has ended. Closing socket ...")
-                    self.cs.close()
-                    return
+                r = json.loads(r)
+                match r['type']:
+                    case MType.INFORM:
+                        print(r['message'])
+                        continue
+                    case MType.ID:
+                        print(f"You are Client {r['message']}")
+                        self.id = int(r['message'])
+                        continue
+                    case MType.END:
+                        print("The game has ended. Closing socket ...")
+                        self.cs.close()
+                        return
 
 
 gameserver = Client()

@@ -15,16 +15,23 @@ class GameServer:
     def game_thread(self):
         self.gs.send(Message("", MType.CONNECTION, CType.GAMESERVER).json)
         while True:
-            recieved = json.loads(self.gs.recv(2048))
-            match recieved['type']:
-                case MType.ID:
-                    print(f"You are GameServer {recieved['message']}")
-                    self.id = int(recieved['message'])
+            recieved = self.gs.recv(2048)
+            for r in recieved.decode('utf-8').split("@"):
+                if not r:
                     continue
-                case MType.END:
-                    print("The game has ended. Closing socket ...")
-                    self.gs.close()
-                    return
+                r = json.loads(r)
+                match r['type']:
+                    case MType.INFORM:
+                        print(r['message'])
+                        continue
+                    case MType.ID:
+                        print(f"You are GameServer {r['message']}")
+                        self.id = int(r['message'])
+                        continue
+                    case MType.END:
+                        print("The game has ended. Closing socket ...")
+                        self.gs.close()
+                        return
 
 
 gameserver = GameServer()
