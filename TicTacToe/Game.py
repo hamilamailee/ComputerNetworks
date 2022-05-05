@@ -1,6 +1,4 @@
 import enum
-from time import sleep
-from typing_extensions import Self
 from Message import *
 
 
@@ -9,19 +7,18 @@ class Game:
         self.player1 = player1
         self.player2 = player2
         self.data = [["" for i in range(3)] for j in range(3)]
-        self.server_client_game()
 
     def server_client_game(self):
         while self.game_end_message():
             self.player2.send(self.game_start_msg('X'))
             self.player2.send(Message(self.data, MType.MOVE, "").json)
-            move = json.loads(self.player2.recv(2048))
+            move = json.loads(self.player2.recv(2048))['message']
             self.data[move//3][move % 3] = 'X'
             if not self.game_end_message():
                 return
             self.player1.send(self.game_start_msg('O'))
             self.player1.send(Message(self.data, MType.MOVE, "").json)
-            move = json.loads(self.player1.recv(2048))
+            move = json.loads(self.player1.recv(2048))['message']
             self.data[move//3][move % 3] = 'O'
         return
 
@@ -48,7 +45,7 @@ class Game:
                 return self.data[0][i]
         if self.data[0][0] == self.data[1][1] == self.data[2][2] and self.data[0][0] != "":
             return self.data[0][0]
-        if self.data[0][2] == self.data[1][1] == self.data[2][2] and self.data[0][2] != "":
+        if self.data[0][2] == self.data[1][1] == self.data[2][0] and self.data[0][2] != "":
             return self.data[0][2]
         for i in range(3):
             for j in range(3):

@@ -1,5 +1,9 @@
 from _thread import *
 import json
+from select import select
+import threading
+
+from matplotlib import interactive
 from init import *
 import socket
 from Message import *
@@ -14,7 +18,7 @@ class WebServer:
         self.ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.gameservers = dict()
         self.clients = dict()
-        self.tuples = dict()
+        self.games = []
         self.start_server()
 
     def start_server(self):
@@ -23,10 +27,19 @@ class WebServer:
         except socket.error as e:
             print(str(e))
         print("WebServer is listening ...")
+        threading.Thread(target=self.interactive_console, args=()).start()
         self.ss.listen()
         while True:
             connection, address = self.ss.accept()
             start_new_thread(self.server_thread, (connection,))
+
+    def interactive_console(self):
+        while True:
+            string = input()
+            match string:
+                case "/users":
+                    print(
+                        f"Number of clients participating in a game: {len(self.games)}")
 
     def server_thread(self, connection):
         c_type = json.loads(connection.recv(2048))
@@ -71,6 +84,8 @@ class WebServer:
         self.gameservers.pop(server)
         self.clients.pop(client)
         game = Game(server, client)
+        self.games.append(game)
+        game.server_client_game()
 
 
 webserver = WebServer()

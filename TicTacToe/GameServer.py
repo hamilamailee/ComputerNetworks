@@ -33,9 +33,9 @@ class GameServer:
                         continue
                     case MType.MOVE:
                         Game.show_game(r['message'])
-                        optinos = Game.game_options(r['message'])
-                        self.gs.send(Message(random.choice(
-                            options), MType.MOVE, CType.GAMESERVER))
+                        options = Game.game_options(r['message'])
+                        self.gs.send(Message(random.choice(options),
+                                     MType.MOVE, CType.GAMESERVER).json)
                     case MType.END:
                         print("The game has ended. Closing socket ...")
                         self.gs.close()
