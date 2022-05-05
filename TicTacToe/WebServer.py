@@ -1,9 +1,6 @@
 from _thread import *
 import json
-from select import select
 import threading
-
-from matplotlib import interactive
 from init import *
 import socket
 from Message import *
@@ -54,25 +51,37 @@ class WebServer:
                     Message(self.last_client, MType.ID, "").json)
                 self.handle_client(connection)
 
-    def handle_game_server(self, connection):
-        self.gameservers[connection] = self.last_gameserver
-        self.last_gameserver += 1
-        connection.send(
-            Message("Waiting for a client to connect", MType.INFORM, "").json)
-        if len(self.clients) > 0:
-            game_server = connection
-            game_client = list(self.clients.items())[0][0]
-            self.start_game(game_client, game_server)
-
     def handle_client(self, connection):
         self.clients[connection] = self.last_client
         self.last_client += 1
         connection.send(
             Message("Looking for a gameserver", MType.INFORM, "").json)
+        self.find_game_server(connection)
+
+    def handle_game_server(self, connection):
+        self.gameservers[connection] = self.last_gameserver
+        self.last_gameserver += 1
+        connection.send(
+            Message("Waiting for a client to connect", MType.INFORM, "").json)
+        self.find_client(connection)
+
+    def find_client(self, connection):
+        if len(self.clients) > 0:
+            game_server = connection
+            game_client = list(self.clients.items())[0][0]
+            self.start_game(game_client, game_server)
+
+    def find_game_server(self, connection):
         if len(self.gameservers) > 0:
             game_server = list(self.gameservers.items())[0][0]
             game_client = connection
             self.start_game(game_client, game_server)
+
+    def check_game(self):
+        if len(self.gameservers) > 0 and len(self.clients) > 0:
+            self.start_game(list(self.clients.items())[
+                            0][0], list(self.gameservers.items())[0][0])
+        return
 
     def start_game(self, client: socket.socket, server: socket.socket):
         server_id = self.gameservers[server]
@@ -86,6 +95,10 @@ class WebServer:
         game = Game(server, client)
         self.games.append(game)
         game.server_client_game()
+        game.player2.send(Message("", MType.END, "").json)
+        self.games.remove(game)
+        self.gameservers[server] = server_id
+        self.check_game()
 
 
 webserver = WebServer()
