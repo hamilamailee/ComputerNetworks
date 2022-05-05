@@ -1,3 +1,4 @@
+from Message import *
 from init import HOST, PORT
 import socket
 
@@ -12,19 +13,18 @@ class GameServer:
         self.game_thread()
 
     def game_thread(self):
-        self.gs.send(str.encode("GAMESERVER"))
-        message = self.gs.recv(2048).decode('utf-8')
-        print(message)
-        self.id = int(message.split(" ")[-1])
+        self.gs.send(Message("", MType.CONNECTION, CType.GAMESERVER).json)
         while True:
-            send = input("Your message: ")
-            self.gs.send(str.encode(send))
-            reply = self.gs.recv(2048)
-            de_reply = reply.decode('utf-8')
-            print(de_reply)
-            if de_reply == "/end":
-                break
-        self.gs.close()
+            recieved = json.loads(self.gs.recv(2048))
+            match recieved['type']:
+                case MType.ID:
+                    print(f"You are GameServer {recieved['message']}")
+                    self.id = int(recieved['message'])
+                    continue
+                case MType.END:
+                    print("The game has ended. Closing socket ...")
+                    self.gs.close()
+                    return
 
 
 gameserver = GameServer()

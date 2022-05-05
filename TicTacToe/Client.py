@@ -1,3 +1,4 @@
+from Message import *
 from init import HOST, PORT
 import socket
 
@@ -12,19 +13,18 @@ class Client:
         self.client_thread()
 
     def client_thread(self):
-        self.cs.send(str.encode("CLIENT"))
-        message = self.cs.recv(2048).decode('utf-8')
-        print(message)
-        self.id = int(message.split(" ")[-1])
+        self.cs.send(Message("", MType.CONNECTION, CType.CLIENT).json)
         while True:
-            send = input("Your message: ")
-            self.cs.send(str.encode(send))
-            reply = self.cs.recv(2048)
-            de_reply = reply.decode('utf-8')
-            print(de_reply)
-            if de_reply == "/end":
-                break
-        self.cs.close()
+            recieved = json.loads(self.cs.recv(2048))
+            match recieved['type']:
+                case MType.ID:
+                    print(f"You are Client {recieved['message']}")
+                    self.id = int(recieved['message'])
+                    continue
+                case MType.END:
+                    print("The game has ended. Closing socket ...")
+                    self.cs.close()
+                    return
 
 
-client = Client()
+gameserver = Client()

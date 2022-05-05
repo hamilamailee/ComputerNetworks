@@ -1,6 +1,9 @@
 from _thread import *
+from ast import match_case
+import json
 from init import HOST, PORT
 import socket
+from Message import *
 
 
 class WebServer:
@@ -26,22 +29,24 @@ class WebServer:
             start_new_thread(self.server_thread, (connection,))
 
     def server_thread(self, connection):
-        c_type = connection.recv(2048).decode('utf-8')
-        if (c_type == "GAMESERVER"):
-            print("A gameserver has been connected")
-            self.gameservers.append(connection)
-            connection.send(str.encode(
-                f"You are GameServer {self.last_gameserver}"))
-            self.last_gameserver += 1
-            self.handle_game_server(connection)
-        elif (c_type == "CLIENT"):
-            print("A client has been connected")
-            self.clients.append(connection)
-            connection.send(str.encode(f"You are Client {self.last_client}"))
-            self.last_client += 1
-            self.handle_client(self, connection)
+        c_type = json.loads(connection.recv(2048))
+        match c_type['sender']:
+            case CType.GAMESERVER:
+                connection.send(
+                    Message(self.last_gameserver, MType.ID, "").json)
+                self.last_gameserver += 1
+                self.handle_game_server(connection)
+                return
+
+            case CType.CLIENT:
+                connection.send(
+                    Message(self.last_client, MType.ID, "").json)
+                self.last_client += 1
+                self.handle_client(connection)
+                return
 
     def handle_game_server(self, connection):
+        self.gameservers.append(connection)
         while True:
             message = connection.recv(2048).decode('utf-8')
             print("recieved message: ", message)
@@ -52,6 +57,7 @@ class WebServer:
         connection.close()
 
     def handle_client(self, connection):
+        self.clients.append(connection)
         while True:
             message = connection.recv(2048).decode('utf-8')
             print("recieved message: ", message)
