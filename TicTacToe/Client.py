@@ -1,4 +1,5 @@
 from Message import *
+from Game import *
 from init import HOST, PORT
 import socket
 
@@ -30,6 +31,16 @@ class Client:
                         print(f"You are Client {r['message']}")
                         self.id = int(r['message'])
                         continue
+                    case MType.MOVE:
+                        Game.show_game(r['message'])
+                        optinos = Game.game_options(r['message'])
+                        while True:
+                            o = int(input("Your choice: "))
+                            if o in optinos:
+                                self.cs.send(
+                                    Message(o, MType.MOVE, CType.CLIENT).json)
+                                break
+                            print("Wrong choice. Please try again.")
                     case MType.END:
                         print("The game has ended. Closing socket ...")
                         self.cs.close()

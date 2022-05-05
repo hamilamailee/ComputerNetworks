@@ -1,6 +1,9 @@
+from pandas import options
 from Message import *
 from init import HOST, PORT
 import socket
+from Game import *
+import random
 
 
 class GameServer:
@@ -28,6 +31,11 @@ class GameServer:
                         print(f"You are GameServer {r['message']}")
                         self.id = int(r['message'])
                         continue
+                    case MType.MOVE:
+                        Game.show_game(r['message'])
+                        optinos = Game.game_options(r['message'])
+                        self.gs.send(Message(random.choice(
+                            options), MType.MOVE, CType.GAMESERVER))
                     case MType.END:
                         print("The game has ended. Closing socket ...")
                         self.gs.close()

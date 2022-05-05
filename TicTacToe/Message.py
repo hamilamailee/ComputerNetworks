@@ -16,7 +16,6 @@ class MType(str, enum.Enum):
     CONNECTION = 'CONNECTION'   # messages showing connection
     INFORM = 'INFORM'           # informing messages
     ID = 'ID'                   # getting id from webserver
-    START = 'START'             # start of the game
     MOVE = 'MOVE'               # movement for the game
     END = 'END'                 # close sockets
 

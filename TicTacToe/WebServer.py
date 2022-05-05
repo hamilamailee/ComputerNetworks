@@ -3,6 +3,7 @@ import json
 from init import *
 import socket
 from Message import *
+from Game import *
 
 
 class WebServer:
@@ -69,12 +70,7 @@ class WebServer:
             f"You've been connected to GameServer {server_id}", MType.INFORM, "").json)
         self.gameservers.pop(server)
         self.clients.pop(client)
-
-    def show_game(data):
-        for i in data:
-            for j in i:
-                print(j, " | ", end=" ")
-            print()
+        game = Game(server, client)
 
 
 webserver = WebServer()
