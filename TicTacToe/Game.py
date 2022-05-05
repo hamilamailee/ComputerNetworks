@@ -1,4 +1,5 @@
 import enum
+from urllib import response
 from Message import *
 
 
@@ -12,13 +13,19 @@ class Game:
         while self.game_end_message():
             self.player2.send(self.game_start_msg('X'))
             self.player2.send(Message(self.data, MType.MOVE, "").json)
-            move = json.loads(self.player2.recv(2048))['message']
+            response = json.loads(self.player2.recv(2048))
+            if response['type'] == 'END':
+                return
+            move = response['message']
             self.data[move//3][move % 3] = 'X'
             if not self.game_end_message():
                 return
             self.player1.send(self.game_start_msg('O'))
             self.player1.send(Message(self.data, MType.MOVE, "").json)
-            move = json.loads(self.player1.recv(2048))['message']
+            response = json.loads(self.player1.recv(2048))
+            if response['type'] == 'END':
+                return
+            move = response['message']
             self.data[move//3][move % 3] = 'O'
         return
 

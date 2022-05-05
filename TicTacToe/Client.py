@@ -1,3 +1,4 @@
+import threading
 from Message import *
 from Game import *
 from init import HOST, PORT
@@ -35,10 +36,14 @@ class Client:
                         Game.show_game(r['message'])
                         optinos = Game.game_options(r['message'])
                         while True:
-                            o = int(input("Your choice: "))
-                            if o in optinos:
+                            o = input("Your choice: ")
+                            if o == "/exit":
                                 self.cs.send(
-                                    Message(o, MType.MOVE, CType.CLIENT).json)
+                                    Message("", MType.END, CType.CLIENT).json)
+                                break
+                            if int(o) in optinos:
+                                self.cs.send(
+                                    Message(int(o), MType.MOVE, CType.CLIENT).json)
                                 break
                             print("Wrong choice. Please try again.")
                     case MType.END:
